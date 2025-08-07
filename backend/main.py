@@ -1,32 +1,42 @@
 """
 FastAPI E-commerce Platform Main Application
 """
-from fastapi import FastAPI, HTTPException
+from contextlib import asynccontextmanager
+
+import uvicorn
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from contextlib import asynccontextmanager
-import uvicorn
 
-from app.core.config import settings
-from app.core.database import connect_to_mongo, close_mongo_connection, init_database
 from app.api.v1.api import api_router
+from app.core.config import settings
+from app.core.database import (
+    close_mongo_connection,
+    connect_to_mongo,
+    init_database,
+)
+from app.core.logging import configure_logging, get_logger
+
+# Configure logging
+configure_logging()
+logger = get_logger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager"""
     # Startup
-    print("🚀 Starting E-commerce Platform...")
+    logger.info("Starting E-commerce Platform", service="ecommerce-api")
     await connect_to_mongo()
     await init_database()
-    print("✅ Application started successfully!")
-    
+    logger.info("Application started successfully", service="ecommerce-api")
+
     yield
-    
+
     # Shutdown
-    print("🛑 Shutting down E-commerce Platform...")
+    logger.info("Shutting down E-commerce Platform", service="ecommerce-api")
     await close_mongo_connection()
-    print("✅ Application shut down successfully!")
+    logger.info("Application shut down successfully", service="ecommerce-api")
 
 
 # Create FastAPI application
@@ -37,7 +47,7 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Add CORS middleware
@@ -52,7 +62,7 @@ app.add_middleware(
 # Add trusted host middleware for security
 app.add_middleware(
     TrustedHostMiddleware,
-    allowed_hosts=["localhost", "127.0.0.1", "*.netlify.app", "*.vercel.app"]
+    allowed_hosts=["localhost", "127.0.0.1", "*.netlify.app", "*.vercel.app"],
 )
 
 # Include API router
@@ -66,7 +76,7 @@ async def root():
         "message": "Welcome to the E-commerce Platform API",
         "version": "1.0.0",
         "docs": "/docs",
-        "redoc": "/redoc"
+        "redoc": "/redoc",
     }
 
 
@@ -76,7 +86,7 @@ async def health_check():
     return {
         "status": "healthy",
         "service": "ecommerce-api",
-        "version": "1.0.0"
+        "version": "1.0.0",
     }
 
 
@@ -86,5 +96,5 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=8000,
         reload=settings.DEBUG,
-        log_level="info"
+        log_level="info",
     )

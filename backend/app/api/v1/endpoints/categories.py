@@ -2,15 +2,15 @@
 Product Categories endpoints
 """
 from typing import Any, List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.core.security import get_current_user_id
 from app.models.product import (
     Category,
     CategoryCreate,
     CategoryResponse,
-    SEOInfo,
-    ProductImage
+    ProductImage,
 )
 
 router = APIRouter()
@@ -18,22 +18,26 @@ router = APIRouter()
 
 @router.get("/", response_model=List[CategoryResponse])
 async def get_categories(
-    parent_id: Optional[str] = Query(None, description="Filter by parent category ID"),
-    level: Optional[int] = Query(None, description="Filter by category level")
+    parent_id: Optional[str] = Query(
+        None, description="Filter by parent category ID"
+    ),
+    level: Optional[int] = Query(None, description="Filter by category level"),
 ) -> Any:
     """Get product categories"""
-    query = Category.is_active == True
-    
+    query = Category.is_active is True
+
     if parent_id:
         query = query & (Category.parent_id == parent_id)
     elif parent_id is None and level == 0:
-        query = query & (Category.parent_id == None)
-    
+        query = query & (Category.parent_id is None)
+
     if level is not None:
         query = query & (Category.level == level)
-    
-    categories = await Category.find(query).sort(+Category.sort_order).to_list()
-    
+
+    categories = (
+        await Category.find(query).sort(+Category.sort_order).to_list()
+    )
+
     return [
         CategoryResponse(
             id=str(cat.id),
@@ -45,8 +49,9 @@ async def get_categories(
             path=cat.path,
             children=cat.children,
             image=cat.image,
-            is_active=cat.is_active
-        ) for cat in categories
+            is_active=cat.is_active,
+        )
+        for cat in categories
     ]
 
 
@@ -56,10 +61,9 @@ async def get_category(category_id: str) -> Any:
     category = await Category.get(category_id)
     if not category:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Category not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Category not found"
         )
-    
+
     return CategoryResponse(
         id=str(category.id),
         name=category.name,
@@ -70,14 +74,16 @@ async def get_category(category_id: str) -> Any:
         path=category.path,
         children=category.children,
         image=category.image,
-        is_active=category.is_active
+        is_active=category.is_active,
     )
 
 
-@router.post("/", response_model=CategoryResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/", response_model=CategoryResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_category(
     category_data: CategoryCreate,
-    current_user_id: str = Depends(get_current_user_id)
+    current_user_id: str = Depends(get_current_user_id),
 ) -> Any:
     """Create new category (admin only)"""
     # Check if slug already exists
@@ -85,33 +91,33 @@ async def create_category(
     if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Category slug already exists"
+            detail="Category slug already exists",
         )
-    
+
     # Get parent category if specified
     parent_category = None
     level = 0
     path = f"/{category_data.slug}"
-    
+
     if category_data.parent_id:
         parent_category = await Category.get(category_data.parent_id)
         if not parent_category:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Parent category not found"
+                detail="Parent category not found",
             )
         level = parent_category.level + 1
         path = f"{parent_category.path}/{category_data.slug}"
-    
+
     # Create category image if provided
     image = None
     if category_data.image_url:
         image = ProductImage(
             url=category_data.image_url,
             alt=f"{category_data.name} category image",
-            is_primary=True
+            is_primary=True,
         )
-    
+
     # Create category
     category = Category(
         name=category_data.name,
@@ -121,16 +127,16 @@ async def create_category(
         level=level,
         path=path,
         image=image,
-        sort_order=category_data.sort_order
+        sort_order=category_data.sort_order,
     )
-    
+
     await category.save()
-    
+
     # Update parent's children list
     if parent_category:
         parent_category.children.append(str(category.id))
         await parent_category.save()
-    
+
     return CategoryResponse(
         id=str(category.id),
         name=category.name,
@@ -141,5 +147,5 @@ async def create_category(
         path=category.path,
         children=category.children,
         image=category.image,
-        is_active=category.is_active
+        is_active=category.is_active,
     )
