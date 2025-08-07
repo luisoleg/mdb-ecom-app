@@ -2,7 +2,8 @@
 Application configuration settings
 """
 from typing import List, Optional
-from pydantic import BaseSettings, validator
+from pydantic import field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 import secrets
 
 
@@ -22,7 +23,8 @@ class Settings(BaseSettings):
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
     
-    @validator("BACKEND_CORS_ORIGINS", pre=True)
+    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
+    @classmethod
     def assemble_cors_origins(cls, v):
         if isinstance(v, str) and not v.startswith("["):
             return [i.strip() for i in v.split(",")]
@@ -71,9 +73,13 @@ class Settings(BaseSettings):
     # Rate Limiting
     RATE_LIMIT_PER_MINUTE: int = 60
     
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    # Allowed Hosts
+    ALLOWED_HOSTS: List[str] = ["localhost", "127.0.0.1", "*.netlify.app", "*.vercel.app"]
+    
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=True
+    )
 
 
 # Create settings instance

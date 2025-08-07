@@ -4,7 +4,7 @@ Product endpoints
 from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from beanie import PydanticObjectId
-from beanie.operators import In, And, Or, Regex
+from beanie.operators import In, And, Or, RegEx
 import math
 
 from app.core.security import get_current_user_id
@@ -348,7 +348,7 @@ async def update_product(
 async def delete_product(
     product_id: str,
     current_user_id: str = Depends(get_current_user_id)
-) -> Any:
+) -> None:
     """
     Delete product (soft delete by setting status to inactive)
     
