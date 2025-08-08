@@ -46,11 +46,11 @@ export const createOrder = createAsyncThunk(
 
 export const getUserOrders = createAsyncThunk(
   'orders/getUserOrders',
-  async (params?: {
+  async (params: {
     status?: string;
     page?: number;
     limit?: number;
-  }, { rejectWithValue }) => {
+  } = {}, { rejectWithValue }) => {
     try {
       const response = await OrderService.getUserOrders(params);
       return response;

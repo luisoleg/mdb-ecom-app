@@ -8,9 +8,9 @@
   body {
     @apply font-sans antialiased;
   }
-  
+
   * {
-    @apply border-border;
+    @apply border-gray-200;
   }
 }
 
@@ -18,23 +18,23 @@
   .btn-primary {
     @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200;
   }
-  
+
   .btn-secondary {
     @apply bg-secondary-200 hover:bg-secondary-300 text-secondary-800 font-medium py-2 px-4 rounded-md transition-colors duration-200;
   }
-  
+
   .btn-outline {
     @apply border border-primary-600 text-primary-600 hover:bg-primary-600 hover:text-white font-medium py-2 px-4 rounded-md transition-colors duration-200;
   }
-  
+
   .input-field {
     @apply w-full px-3 py-2 border border-secondary-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
   }
-  
+
   .card {
     @apply bg-white border border-secondary-200 rounded-lg shadow-sm;
   }
-  
+
   .card-hover {
     @apply card hover:shadow-md transition-shadow duration-200;
   }
